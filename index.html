@@ -22,8 +22,8 @@
             </div>
 
             <div>
-                <label class="block text-gray-700 font-medium mb-2">ملف السيرة الذاتية (PDF أو النص)</label>
-                <input type="file" id="cvFile" class="w-full p-3 border rounded-lg bg-gray-50">
+                <label class="block text-gray-700 font-medium mb-2">ملف السيرة الذاتية (PDF أو Word)</label>
+                <input type="file" id="cvFile" accept=".pdf,.doc,.docx,.txt" class="w-full p-3 border rounded-lg bg-gray-50">
             </div>
 
             <button onclick="analyzeCV()" id="submitBtn" class="w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700 transition">بدء التحليل الذكي</button>
@@ -52,38 +52,52 @@
             const file = fileInput.files[0];
             const reader = new FileReader();
 
-            reader.onload = async function(e) {
-                const fileContent = e.target.result;
-                btn.innerText = 'جاري التحليل بواسطة الذكاء الاصطناعي...';
-                btn.disabled = true;
+            btn.innerText = 'جاري التحليل بواسطة الذكاء الاصطناعي...';
+            btn.disabled = true;
 
+            reader.onload = async function(e) {
                 try {
-                    const prompt = `أنت خبير توظيف ومحلل سير ذاتية. قم بتقييم السيرة الذاتية التالية للوظيفة المطلوبة: "${jobTitle}".
+                    const base64Data = e.target.result.split(',')[1];
+                    const mimeType = file.type || 'application/pdf';
+
+                    const prompt = `أنت خبير توظيف ومحلل سير ذاتية. قم بتقييم السيرة الذاتية المرفقة للوظيفة المطلوبة: "${jobTitle}".
                     ملاحظات إضافية عن الوظيفة: "${jobDetails}".
-                    محتوى السيرة الذاتية:
-                    ${fileContent}
                     
-                    أعطني تقييماً مفصلاً يشتمل على:
+                    أعطني تقييماً مفصلاً باللغة العربية يشتمل على:
                     1. نسبة التوافق (من 100).
                     2. أبرز نقاط القوة.
                     3. نقاط الضعف أو النقص.
                     4. قرار نهائي (هل يُنصح بقبوله للمقابلة أم لا ولماذا؟).`;
 
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6K7X7diBNn_TAgjfu9McUOKLtH7dYPwlVtAOWb131Bxeg`, {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6LeE5ISFyXzhM1Z3ZVZPD4OAeaBerpFwainF71U0wYYzg`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }]
+                            contents: [{
+                                parts: [
+                                    { text: prompt },
+                                    {
+                                        inline_data: {
+                                            mime_type: mimeType,
+                                            data: base64Data
+                                        }
+                                    }
+                                ]
+                            }]
                         })
                     });
 
                     const data = await response.json();
-                    const text = data.candidates[0].content.parts[0].text;
-
-                    resultText.innerText = text;
-                    resultContainer.classList.remove('hidden');
+                    
+                    if (data.candidates && data.candidates[0].content) {
+                        const text = data.candidates[0].content.parts[0].text;
+                        resultText.innerText = text;
+                        resultContainer.classList.remove('hidden');
+                    } else {
+                        throw new Error('فشل التحليل من الخادم.');
+                    }
                 } catch (error) {
-                    alert('حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. تأكد من محتوى الملف.');
+                    alert('حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. تأكد من حجم الملف أو صيغته.');
                     console.error(error);
                 } finally {
                     btn.innerText = 'بدء التحليل الذكي';
@@ -91,7 +105,7 @@
                 }
             };
 
-            reader.readAsText(file);
+            reader.readAsDataURL(file);
         }
     </script>
 </body>
