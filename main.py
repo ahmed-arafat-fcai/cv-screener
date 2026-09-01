@@ -10,26 +10,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# تفعيل الـ CORS لاستقبال الطلبات من أي موقع
+# الحل هنا: أضف هذا الجزء تماماً كما هو
+origins = ["*"] # بيسمح لأي موقع يكلم السيرفر (للتجربة)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app = FastAPI(title="AI CV Screener API")
-
-# السماح بالاتصال من أي فرونت إند (CORS)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # تهيئة عميل جوجل أيه آي (تأكد من وضع المفتاح في Environment Variables)
 # يمكنك استخدام Google Gemini API المجاني تماماً عبر Google AI Studio
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
