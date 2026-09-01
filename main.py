@@ -5,6 +5,19 @@ from google import genai  # مكتبة جوجل الرسمية الحديثة ل
 from pypdf import PdfReader
 from docx import Document
 import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# تفعيل الـ CORS لاستقبال الطلبات من أي موقع
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app = FastAPI(title="AI CV Screener API")
 
