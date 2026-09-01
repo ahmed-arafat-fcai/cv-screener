@@ -162,7 +162,7 @@
             formData.append('file', cvFile);
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/analyze', {
+                const response = await fetch('cv-screener-production-e053.up.railway.app', {
                     method: 'POST',
                     body: formData
                 });
